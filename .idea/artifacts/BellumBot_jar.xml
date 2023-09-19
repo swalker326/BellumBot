@@ -1,0 +1,9 @@
+<component name="ArtifactManager">
+  <artifact type="jar" build-on-make="true" name="BellumBot:jar">
+    <output-path>$USER_HOME$/Downloads/UMC/plugins/BellumBot/artifacts/BellumBot_jar</output-path>
+    <root id="archive" name="BellumBot.jar">
+      <element id="module-output" name="BellumBot" />
+      <element id="extracted-dir" path="$USER_HOME$/Downloads/plugin-api/umc-api.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>
