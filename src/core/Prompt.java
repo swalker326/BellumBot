@@ -13,6 +13,9 @@ public class Prompt {
     public int[] spirit = {0, 0};
     public int xp = 0;
     public int gold = 0;
+    public int illume;
+    public int satio;
+    public int lif;
     public boolean flagged = false;
     public String charName = "";
     public String reply = "";
@@ -20,11 +23,15 @@ public class Prompt {
     public String tankCondition = "";
     public String opponent = "";
     public String opponentCondition = "";
-    public Pattern promptPattern = Pattern.compile("^\\[L:(\\d+)] \\[(\\w+) H:(\\d+)/(\\d+) M:(\\d+)/(\\d+) S:(\\d+)/(\\d+) E:(\\d+)/(\\d+)] \\[A:(-?\\d+)] \\[]");
+    public Pattern promptPattern = Pattern.compile("^\\[L:(\\d+)] \\[(\\w+) H:(\\d+)/(\\d+) M:(\\d+)/(\\d+) S:(\\d+)/(\\d+) E:(\\d+)/(\\d+)] \\[A:(-?\\d+)] \\[(?:I:(\\d+) S:(\\d+) L:(\\d+))?]");
     public Pattern promptLineTwoPattern = Pattern.compile("^\\[PK:(\\w+)?] \\[XP:(\\d+)] \\[G:(\\d+)] \\[Reply:(\\w+)?]");
 
-    public Pattern battlePromptPattern = Pattern.compile("^\\[(\\w+)]\\((\\w+)\\) \\[([\\w\\s-]+)]\\(([\\w\\s-]+)\\)");
-    public Pattern battlePromptLineTwoPattern = Pattern.compile("^\\[L:(\\d+)] \\[H:(\\d+)/(\\d+) M:(\\d+)/(\\d+) S:(\\d+)/(\\d+) E:(\\d+)/(\\d+)] \\[A:(-?\\d+)] \\[]");
+    // battle:     [L:0] [H:79596/79628 M:76646/76646 S:76700/76700 E:76570/76628] [A:-992] [I:21 S:89 L:12]
+    // no battle:  [L:0] [Bellum H:79561/79628 M:76646/76646 S:76700/76700 E:76570/76628] [A:-992] [I:21 S:89 L:12]
+
+
+    public Pattern battlePromptPattern = Pattern.compile("^\\[(\\w+)]\\(([\\w\\s]+)\\) \\[([\\w\\s-]+)]\\(([\\w\\s-]+)\\)");
+    public Pattern battlePromptLineTwoPattern = Pattern.compile("^\\[L:(\\d+)] \\[H:(\\d+)/(\\d+) M:(\\d+)/(\\d+) S:(\\d+)/(\\d+) E:(\\d+)/(\\d+)] \\[A:(-?\\d+)] \\[(?:I:(\\d+) S:(\\d+) L:(\\d+))?]");
 
 
     public Prompt() {
@@ -38,18 +45,45 @@ public class Prompt {
     public void processBattlePrompt(BellumBot bot, String prompt) {
         Matcher promptMatcher = this.battlePromptPattern.matcher(prompt);
         if (promptMatcher.find()) {
-            this.lag = Integer.parseInt(promptMatcher.group(1));
-            this.tank = promptMatcher.group(2);
-            this.tankCondition = promptMatcher.group(3);
-            this.opponent = promptMatcher.group(4);
-            this.opponentCondition = promptMatcher.group(5);
+            this.tank = promptMatcher.group(1);
+            this.tankCondition = promptMatcher.group(2);
+            this.opponent = promptMatcher.group(3);
+            this.opponentCondition = promptMatcher.group(4);
 
             bot.debug(BellumBot.DEBUG.MED, () -> {
-                bot.script.print("BATTLE PROMPT MATCH -->: " +
-                        "\n Attacker: " + promptMatcher.group(1) +
-                        "\n Attacker Target: " + promptMatcher.group(2) +
-                        "\n Defender: " + promptMatcher.group(3) +
-                        "\n Defender Target: " + promptMatcher.group(4));
+                bot.console.capture("BATTLE PROMPT -->: " +
+                        "Attacker: " + promptMatcher.group(1) +
+                        " Attacker Condition: (" + promptMatcher.group(2) + ")" +
+                        " Defender: " + promptMatcher.group(3) +
+                        " Defender Condition: (" + promptMatcher.group(4) + ")");
+            });
+        }
+        Matcher promptMatcherLineTwo = this.battlePromptLineTwoPattern.matcher(prompt);
+        if (promptMatcherLineTwo.find()) {
+            this.lag = Integer.parseInt(promptMatcherLineTwo.group(1));
+            this.health[0] = Integer.parseInt(promptMatcherLineTwo.group(2));
+            this.health[1] = Integer.parseInt(promptMatcherLineTwo.group(3));
+            this.mana[0] = Integer.parseInt(promptMatcherLineTwo.group(4));
+            this.mana[1] = Integer.parseInt(promptMatcherLineTwo.group(5));
+            this.spirit[0] = Integer.parseInt(promptMatcherLineTwo.group(6));
+            this.spirit[1] = Integer.parseInt(promptMatcherLineTwo.group(7));
+            this.endurance[0] = Integer.parseInt(promptMatcherLineTwo.group(8));
+            this.endurance[1] = Integer.parseInt(promptMatcherLineTwo.group(9));
+            this.illume = Integer.parseInt(promptMatcherLineTwo.group(11));
+            this.satio = Integer.parseInt(promptMatcherLineTwo.group(12));
+            this.lif = Integer.parseInt(promptMatcherLineTwo.group(13));
+            bot.debug(BellumBot.DEBUG.MED, () -> {
+                bot.console.capture(
+                        "BATTLE PROMPT LINE 2 -->: " +
+                                " Lag: " + this.lag +
+                                " Health: " + this.health[0] + "/" + this.health[1] +
+                                " Mana: " + this.mana[0] + "/" + this.mana[1] +
+                                " Spirit: " + this.spirit[0] + "/" + this.spirit[1] +
+                                " Endurance: " + this.endurance[0] + "/" + this.endurance[1] +
+                                " Illume: " + this.illume +
+                                " Satio: " + this.satio +
+                                " Lif: " + this.lif
+                );
             });
         }
     }
@@ -67,20 +101,26 @@ public class Prompt {
             this.spirit[1] = Integer.parseInt(promptMatcher.group(8));
             this.endurance[0] = Integer.parseInt(promptMatcher.group(9));
             this.endurance[1] = Integer.parseInt(promptMatcher.group(10));
+            this.illume = Integer.parseInt(promptMatcher.group(12));
+            this.satio = Integer.parseInt(promptMatcher.group(13));
+            this.lif = Integer.parseInt(promptMatcher.group(14));
             bot.debug(BellumBot.DEBUG.MED, () -> {
-                bot.console.capture("BASIC PROMPT LN 1 -->: " +
-                        "\n Lag: " + this.lag +
-                        "\n Health: " + this.health[0] + "/" + this.health[1] +
-                        "\n Mana: " + this.mana[0] + "/" + this.mana[1] +
-                        "\n Spirit: " + this.spirit[0] + "/" + this.spirit[1] +
-                        "\n Endurance: " + this.endurance[0] + "/" + this.endurance[1]);
+                bot.console.capture("PROMPT -->: " +
+
+                        " Lag: " + this.lag +
+                        " Health: " + this.health[0] + "/" + this.health[1] +
+                        " Mana: " + this.mana[0] + "/" + this.mana[1] +
+                        " Spirit: " + this.spirit[0] + "/" + this.spirit[1] +
+                        " Endurance: " + this.endurance[0] + "/" + this.endurance[1] +
+                        " Illume: " + this.illume +
+                        " Satio: " + this.satio +
+                        " Lif: " + this.lif);
+
             });
         }
         Matcher promptMather = this.promptLineTwoPattern.matcher(prompt);
         if (promptMather.find()) {
-            bot.debug(BellumBot.DEBUG.MED, () -> {
-                bot.console.capture("group 1 " + promptMather.group(1));
-            });
+            bot.state.battleState = State.BATTLESTATE.NONCOMBAT;
             String groupOne = promptMather.group(1);
             this.flagged = groupOne != null && groupOne.equals("PKer");
             this.xp = Integer.parseInt(promptMather.group(2));
@@ -89,10 +129,10 @@ public class Prompt {
 
             bot.debug(BellumBot.DEBUG.MED, () -> {
                 bot.console.capture("PROMPT LINE 2 -->: " +
-                        "\n PK: " + this.flagged +
-                        "\n XP: " + this.xp +
-                        "\n G: " + this.gold +
-                        "\n Reply: " + this.reply);
+                        " PK: " + this.flagged +
+                        " XP: " + this.xp +
+                        " G: " + this.gold +
+                        " Reply: " + this.reply);
             });
         }
         processBattlePrompt(bot, prompt);

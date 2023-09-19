@@ -82,7 +82,7 @@ public class BellumBot {
     }
 
     public void init(ScriptInterface script) {
-        
+
         setDebug(script.getVariable("DEBUG"));
 
         this.script = script;
@@ -96,7 +96,7 @@ public class BellumBot {
     }
 
     public void IncomingEvent(ScriptInterface script) {
-        debug(DEBUG.MED, () -> console.capture("EVENT -->" + script.getEvent()));
+        debug(DEBUG.HIGH, () -> console.capture("EVENT -->" + script.getEvent()));
 
         //with DEBUG high we can log raw events to a file
         debug(DEBUG.HIGH, () -> EventLogger.logEvent(script));
