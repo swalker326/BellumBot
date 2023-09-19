@@ -6,18 +6,22 @@ public class State {
         NONCOMBAT,
         UNKNOWN
     }
+
     enum POSITION {
         STANDING,
         RESTING,
         SLEEPING,
         UNKNOWN
     }
-    private BATTLESTATE battleState;
-    private POSITION position;
+
+    public BATTLESTATE battleState;
+    public POSITION position;
+
     public State() {
         this.battleState = BATTLESTATE.UNKNOWN;
         this.position = State.POSITION.UNKNOWN;
     }
+
     public void ProcessPosition(String event) {
 
         if (event.contains("While you're sleeping? Maybe you should wake up first?") || event.contains("You lie down and go to sleep.")) {
@@ -29,6 +33,7 @@ public class State {
         }
         System.out.println("Position: " + this.position);
     }
+
     public void ProcessBattleState(String event) {
         if (event.contains("You are already in combat!") || event.contains("You are already in combat.")) {
             this.battleState = BATTLESTATE.COMBAT;
@@ -37,6 +42,7 @@ public class State {
         }
         System.out.println("Battle State: " + this.battleState);
     }
+
     public State ProcessState(String event) {
         this.ProcessPosition(event);
         this.ProcessBattleState(event);
