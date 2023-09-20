@@ -2,44 +2,39 @@ package core;
 
 import com.lsd.umc.script.ScriptInterface;
 
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
+import java.util.regex.Pattern;
+
 public class Spell {
-    protected Boolean isPrevent = false;
+    private final PropertyChangeSupport support = new PropertyChangeSupport(this);
+    private Boolean onCooldown;
+    private Boolean isActive = false;
     protected String name;
+    protected String prevent;
     protected String target;
     protected String command;
     protected String pool;
-    protected String preventMessage;
-    protected String[] castMessages;
-    protected String[] recastMessages;
+    protected Pattern castMessage;
     protected int cost;
     protected int lag;
     protected int duration;
-    protected int cooldown;
     protected ScriptInterface script = null;
 
-    public Spell(ScriptInterface script, String name, String target, String[] castMessages, String[] recastMessages, String[] failMessages, int cost, int lag, int duration, int cooldown) {
+    public Spell(ScriptInterface script, String name) {
         this.script = script;
         this.name = name;
-        this.target = target;
-        this.castMessages = castMessages;
-        this.recastMessages = recastMessages;
-        this.cost = cost;
-        this.lag = lag;
-        this.duration = duration;
-        this.cooldown = cooldown;
+        this.onCooldown = false;
+        this.isActive = false;
     }
 
-    public Spell(ScriptInterface script, String name, String[] castMessages, String[] recastMessages, String command) {
-        this.script = script;
-        this.name = name;
-        this.target = "self";
-        this.castMessages = castMessages;
-        this.recastMessages = recastMessages;
-        this.command = command;
+    public Boolean checkSpellCastMessages(String text) {
+        return this.castMessage.matcher(text).find();
     }
 
     public void doSpell() {
-        if (this.command != null) {
+        script.print("Casting " + this.name);
+        if (this.command != null && !this.isActive) {
             script.send(this.command);
         } else {
             script.capture("failed to do " + this.name + " command is not defined");
@@ -66,12 +61,11 @@ public class Spell {
         this.target = target;
     }
 
-    public void setCastMessages(String[] castMessages) {
-        this.castMessages = castMessages;
-    }
-
-    public void setRecastMessages(String[] recastMessages) {
-        this.recastMessages = recastMessages;
+    public void setCastMessage(String castMessage) {
+        if (!castMessage.startsWith("^")) {
+            castMessage = "^" + castMessage;
+        }
+        this.castMessage = Pattern.compile(castMessage);
     }
 
     public void setCost(int cost) {
@@ -86,73 +80,38 @@ public class Spell {
         this.duration = duration;
     }
 
-    public void setCooldown(int cooldown) {
-        this.cooldown = cooldown;
+    public void setOnCooldown(Boolean cooldown) {
+        this.onCooldown = cooldown;
+    }
+
+    public boolean isActive() {
+        return this.isActive;
     }
 
     public String getName() {
         return this.name;
     }
 
-    public String getTarget() {
-        return this.target;
-    }
-
-    public String[] getCastMessages() {
-        return this.castMessages;
-    }
-
-    public String[] getRecastMessages() {
-        return this.recastMessages;
-    }
-
-    public int getCost() {
-        return this.cost;
-    }
-
-    public int getLag() {
-        return this.lag;
-    }
-
-    public int getDuration() {
-        return this.duration;
-    }
-
-    public int getCooldown() {
-        return this.cooldown;
-    }
-
-    public String getCommand() {
-        return this.command;
+    public Boolean getOnCooldown() {
+        return this.onCooldown;
     }
 
     public void setCommand(String command) {
         this.command = command;
     }
 
-    public Boolean getIsPrevent() {
-        return this.isPrevent;
+    public void setActive(boolean active) {
+        boolean oldActive = this.isActive;
+        this.isActive = active;
+        support.firePropertyChange("isActive", oldActive, active);
     }
 
-    public void setIsPrevent(Boolean isPrevent) {
-        this.isPrevent = isPrevent;
+    public void addPropertyChangeListener(PropertyChangeListener pcl) {
+        support.addPropertyChangeListener(pcl);
     }
 
-    public void addCastMessage(String message) {
-        String[] newCastMessages = new String[this.castMessages.length + 1];
-        for (int i = 0; i < this.castMessages.length; i++) {
-            newCastMessages[i] = this.castMessages[i];
-        }
-        newCastMessages[this.castMessages.length] = message;
-        this.castMessages = newCastMessages;
+    public void removePropertyChangeListener(PropertyChangeListener pcl) {
+        support.removePropertyChangeListener(pcl);
     }
 
-    public void addRecastMessage(String message) {
-        String[] newRecastMessages = new String[this.recastMessages.length + 1];
-        for (int i = 0; i < this.recastMessages.length; i++) {
-            newRecastMessages[i] = this.recastMessages[i];
-        }
-        newRecastMessages[this.recastMessages.length] = message;
-        this.recastMessages = newRecastMessages;
-    }
 }

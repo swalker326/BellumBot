@@ -45,6 +45,7 @@ public class Prompt {
     public void processBattlePrompt(BellumBot bot, String prompt) {
         Matcher promptMatcher = this.battlePromptPattern.matcher(prompt);
         if (promptMatcher.find()) {
+            bot.state.battleState = State.BATTLESTATE.COMBAT;
             this.tank = promptMatcher.group(1);
             this.tankCondition = promptMatcher.group(2);
             this.opponent = promptMatcher.group(3);
@@ -69,9 +70,12 @@ public class Prompt {
             this.spirit[1] = Integer.parseInt(promptMatcherLineTwo.group(7));
             this.endurance[0] = Integer.parseInt(promptMatcherLineTwo.group(8));
             this.endurance[1] = Integer.parseInt(promptMatcherLineTwo.group(9));
-            this.illume = Integer.parseInt(promptMatcherLineTwo.group(11));
-            this.satio = Integer.parseInt(promptMatcherLineTwo.group(12));
-            this.lif = Integer.parseInt(promptMatcherLineTwo.group(13));
+            if (promptMatcherLineTwo.group(11) != null) {
+                this.illume = Integer.parseInt(promptMatcherLineTwo.group(11));
+                this.satio = Integer.parseInt(promptMatcherLineTwo.group(12));
+                this.lif = Integer.parseInt(promptMatcherLineTwo.group(13));
+            }
+
             bot.debug(BellumBot.DEBUG.MED, () -> {
                 bot.console.capture(
                         "BATTLE PROMPT LINE 2 -->: " +
@@ -91,6 +95,7 @@ public class Prompt {
     public Prompt ProcessPrompt(BellumBot bot, String prompt) {
         Matcher promptMatcher = this.promptPattern.matcher(prompt);
         if (promptMatcher.find()) {
+            bot.state.battleState = State.BATTLESTATE.NONCOMBAT;
             this.lag = Integer.parseInt(promptMatcher.group(1));
             this.charName = promptMatcher.group(3);
             this.health[0] = Integer.parseInt(promptMatcher.group(3));
@@ -101,9 +106,13 @@ public class Prompt {
             this.spirit[1] = Integer.parseInt(promptMatcher.group(8));
             this.endurance[0] = Integer.parseInt(promptMatcher.group(9));
             this.endurance[1] = Integer.parseInt(promptMatcher.group(10));
-            this.illume = Integer.parseInt(promptMatcher.group(12));
-            this.satio = Integer.parseInt(promptMatcher.group(13));
-            this.lif = Integer.parseInt(promptMatcher.group(14));
+            if (promptMatcher.group(12) != null) {
+                this.illume = Integer.parseInt(promptMatcher.group(12));
+                this.satio = Integer.parseInt(promptMatcher.group(13));
+                this.lif = Integer.parseInt(promptMatcher.group(14));
+            }
+
+            bot.spells.SpellUp();
             bot.debug(BellumBot.DEBUG.MED, () -> {
                 bot.console.capture("PROMPT -->: " +
 
@@ -120,7 +129,6 @@ public class Prompt {
         }
         Matcher promptMather = this.promptLineTwoPattern.matcher(prompt);
         if (promptMather.find()) {
-            bot.state.battleState = State.BATTLESTATE.NONCOMBAT;
             String groupOne = promptMather.group(1);
             this.flagged = groupOne != null && groupOne.equals("PKer");
             this.xp = Integer.parseInt(promptMather.group(2));

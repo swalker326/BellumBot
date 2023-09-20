@@ -1,15 +1,17 @@
 package core;
 
 import com.lsd.umc.script.ScriptInterface;
+import gui.SpellTracker;
 
 public class BellumBot {
     protected ScriptInterface script = null;
+    protected SpellTracker spellTracker = null;
     protected BellumBotConsole console = new BellumBotConsole(this);
     public Spells spells = null;
     protected Prompt prompt = null;
     public State state = null;
-    private Mob[] mobs = null;
-    private Room room = null;
+    private final Mob[] mobs = null;
+    private final Room room = null;
 
     public enum DEBUG {
         OFF(0), //0
@@ -54,6 +56,7 @@ public class BellumBot {
 
     public String loadSpellsFromFile(String args) {
         spells.LoadSpells(args);
+        this.spellTracker = new SpellTracker(spells);
         return "";
     }
 
@@ -81,6 +84,15 @@ public class BellumBot {
         }
     }
 
+    public String SpellTracker(String args) {
+        if (spellTracker.isVisible()) {
+            spellTracker.hideTracker();
+        } else {
+            spellTracker.showTracker();
+        }
+        return "";
+    }
+
     public void init(ScriptInterface script) {
 
         setDebug(script.getVariable("DEBUG"));
@@ -92,17 +104,19 @@ public class BellumBot {
         script.registerCommand("LOADSPELLS", "core.BellumBot", "loadSpellsFromFile");
         script.registerCommand("BUFF", "core.BellumBot", "buff");
         script.registerCommand("CONSOLE", "core.BellumBot", "Console");
+        script.registerCommand("SPELLS", "core.BellumBot", "SpellTracker");
         script.print("BellumBot initialized");
     }
 
     public void IncomingEvent(ScriptInterface script) {
         debug(DEBUG.HIGH, () -> console.capture("EVENT -->" + script.getEvent()));
-
+        String text = script.getText();
         //with DEBUG high we can log raw events to a file
         debug(DEBUG.HIGH, () -> EventLogger.logEvent(script));
         setDebug(script.getVariable("DEBUG"));
-        prompt = prompt.ProcessPrompt(this, script.getText());
-        state = state.ProcessState(script.getText());
+        prompt = prompt.ProcessPrompt(this, text);
+        state = state.ProcessState(text);
+        spells.checkSpells(text);
     }
 
 }
